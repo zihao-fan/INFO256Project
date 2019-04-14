@@ -2,7 +2,7 @@ import keras
 import numpy as np
 import json
 
-from data_helper import load_embeddings,  load_abstract_to_label
+from data_helper import load_embeddings,  load_abstract_to_label, load_ref_to_label
 import models
 
 def train_and_val(model_path, 
@@ -18,12 +18,24 @@ def train_and_val(model_path,
             epochs=epochs, batch_size=batch_size)
     model.save(model_path)
 
-if __name__ == '__main__':
+def load_and_train_abstract():
     label2idx = json.load(open('../data/journal2idx.json', 'r'))
     label_num = len(label2idx) + 1
     embedding_path = '../data/glove.42B.300d.50K.w2v.txt'
     embeddings, vocab, embedding_size=load_embeddings(embedding_path, 100000)
     X_train, y_train, X_val, y_val, X_test, y_test = load_abstract_to_label('../data/dataset_abstract_stat_50.npy', embeddings, vocab)
-
     model = models.baseline_abstract_cnn_model(embeddings, len(vocab), embedding_size, label_num)
     train_and_val('../models/abstract_cnn_baseline', model, X_train, y_train, X_val, y_val)
+
+def load_and_train_ref():
+    embedding_size = 50
+    label2idx = json.load(open('../data/journal2idx.json', 'r'))
+    label_num = len(label2idx) + 1
+    journal2idx_all = json.load(open('../data/journal2idx_all.json', 'r'))
+    X_train, y_train, X_val, y_val, X_test, y_test = load_ref_to_label('../data/dataset_ref_stat_50.npy')
+    print('Input journals', len(journal2idx_all), 'embedding_size', embedding_size, 'label_num', label_num)
+    model = models.baseline_reference_cnn_model(len(journal2idx_all), embedding_size, label_num)
+    train_and_val('../models/ref_cnn_baseline', model, X_train, y_train, X_val, y_val)
+
+if __name__ == '__main__':
+    load_and_train_ref()

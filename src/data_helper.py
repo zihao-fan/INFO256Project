@@ -49,6 +49,18 @@ def get_word_ids(docs, vocab, max_length=1000):
 
     return np.array(doc_ids)
 
+def pad_ref(refs, max_length = 200):
+    
+    ref_ids = []
+    for ref in refs:
+        rids = []
+        for item in ref[:max_length]:
+            rids.append(item)
+        for i in range(len(rids), max_length):
+            rids.append(0)
+        ref_ids.append(rids)
+    return np.array(ref_ids)
+
 def load_abstract_to_label(data_path, embeddings, vocab):
     data = np.load(data_path).item()
     X_train, y_train, X_val, y_val, X_test, y_test = data['X_train'], data['y_train'], data['X_val'], data['y_val'], data['X_test'], data['y_test']
@@ -57,6 +69,17 @@ def load_abstract_to_label(data_path, embeddings, vocab):
     X_test = get_word_ids(X_test, vocab)
     return X_train, y_train, X_val, y_val, X_test, y_test
 
+def load_ref_to_label(data_path):
+    data = np.load(data_path).item()
+    X_train, y_train, X_val, y_val, X_test, y_test = data['X_train'], data['y_train'], data['X_val'], data['y_val'], data['X_test'], data['y_test']
+    X_train = pad_ref(X_train)
+    X_val = pad_ref(X_val)
+    X_test = pad_ref(X_test)
+    return X_train, y_train, X_val, y_val, X_test, y_test
+
 if __name__ == '__main__':
-    embeddings, vocab, embedding_size=load_embeddings(embedding_path, 100000)
-    load_abstract_to_label('../data/dataset_abstract_stat_50.npy', embeddings, vocab)
+
+    # embeddings, vocab, embedding_size=load_embeddings(embedding_path, 100000)
+    # load_abstract_to_label('../data/dataset_abstract_stat_50.npy', embeddings, vocab)
+
+    load_ref_to_label('../data/dataset_ref_stat_50.npy')

@@ -36,7 +36,7 @@ def baseline_abstract_cnn_model(embeddings, vocab_size, word_embedding_dim, labe
     return model
 
 def baseline_reference_cnn_model(vocab_size, word_embedding_dim, label_num):
-    sequence_input = Input(shape=(None,), dtype='int32')
+    word_sequence_input = Input(shape=(None,), dtype='int32')
     word_embedding_layer = Embedding(vocab_size,
                                     word_embedding_dim,
                                     trainable=True)
@@ -60,6 +60,7 @@ def baseline_reference_cnn_model(vocab_size, word_embedding_dim, label_num):
     model = Model(inputs=word_sequence_input, outputs=x)
 
     model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['acc'])
+    return model
 
 if __name__ == '__main__':
     pass
