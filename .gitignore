@@ -1,4 +1,15 @@
 *.DS_Store
+data/dataset_abstract_stat_50.npy
+data/dataset_ref_stat_50.npy
+data/dataset_stat_50_abstract.json
+data/dataset_stat_50_ref.json
+data/glove.42B.300d.50K.w2v.txt
+data/paper_abstract.csv
+data/paper_info_1990.csv
+data/paper_title.csv
+data/paper2issn_all.json
+data/journal2idx_all.json
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
