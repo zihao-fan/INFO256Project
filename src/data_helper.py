@@ -6,14 +6,14 @@ def load_embeddings(filename, max_vocab_size):
 
     vocab={}
     embeddings=[]
-    with open(filename) as file:
+    with open(filename, 'r', encoding="utf-8") as file:
         
         cols=file.readline().split(" ")
         num_words=int(cols[0])
         size=int(cols[1])
         embeddings.append(np.zeros(size))  # 0 = 0 padding if needed
         embeddings.append(np.zeros(size))  # 1 = UNK
-        vocab["_0_"]=0
+        vocab["_PAD_"]=0
         vocab["_UNK_"]=1
         
         for idx,line in enumerate(file):
@@ -63,23 +63,46 @@ def pad_ref(refs, max_length = 200):
 
 def load_abstract_to_label(data_path, embeddings, vocab):
     data = np.load(data_path).item()
-    X_train, y_train, X_val, y_val, X_test, y_test = data['X_train'], data['y_train'], data['X_val'], data['y_val'], data['X_test'], data['y_test']
+    X_train, y_train, y_train_r, X_val, y_val, y_val_r, X_test, y_test, y_test_r = data['X_train_abstract'], data['y_train_journal'], data['y_train_rank'],\
+                                                    data['X_val_abstract'], data['y_val_journal'], data['y_val_rank'],\
+                                                    data['X_test_abstract'], data['y_test_journal'], data['y_test_rank']
     X_train = get_word_ids(X_train, vocab)
     X_val = get_word_ids(X_val, vocab)
     X_test = get_word_ids(X_test, vocab)
-    return X_train, y_train, X_val, y_val, X_test, y_test
+    return X_train, y_train, y_train_r, X_val, y_val, y_val_r, X_test, y_test, y_test_r
 
-def load_ref_to_label(data_path):
+def load_ref_chain_to_label(data_path):
     data = np.load(data_path).item()
-    X_train, y_train, X_val, y_val, X_test, y_test = data['X_train'], data['y_train'], data['X_val'], data['y_val'], data['X_test'], data['y_test']
+    X_train, y_train, y_train_r, X_val, y_val, y_val_r, X_test, y_test, y_test_r = data['X_train_ref_chain'], data['y_train_journal'], data['y_train_rank'],\
+                                        data['X_val_ref_chain'], data['y_val_journal'], data['y_val_rank'], \
+                                        data['X_test_ref_chain'], data['y_test_journal'], data['y_test_rank']
     X_train = pad_ref(X_train)
     X_val = pad_ref(X_val)
     X_test = pad_ref(X_test)
-    return X_train, y_train, X_val, y_val, X_test, y_test
+    return X_train, y_train, y_train_r, X_val, y_val, y_val_r, X_test, y_test, y_test_r
+
+def load_ref_nb_to_label(data_path):
+    data = np.load(data_path).item()
+    X_train_1, X_train_2, y_train, y_train_r, X_val_1, X_val_2, y_val, y_val_r, X_test_1, X_test_2, y_test, y_test_r = data['X_train_ref_level1'],data['X_train_ref_level2'], data['y_train_journal'], data['y_train_rank'],\
+                                        data['X_val_ref_level1'], data['X_val_ref_level2'], data['y_val_journal'], data['y_val_rank'], \
+                                        data['X_test_ref_level1'], data['X_test_ref_level2'], data['y_test_journal'], data['y_test_rank']
+    
+    data = X_train_1, X_train_2, y_train, y_train_r, X_val_1, X_val_2, y_val, y_val_r, X_test_1, X_test_2, y_test, y_test_r
+    data = tuple([np.array(item) for item in data])
+    X_train_1, X_train_2, y_train, y_train_r, X_val_1, X_val_2, y_val, y_val_r, X_test_1, X_test_2, y_test, y_test_r = data
+    X_train = [X_train_1, X_train_2]
+    X_val = [X_val_1, X_val_2]
+    X_test = [X_test_1, X_test_2]
+    print(X_train_1[:10])
+    print(X_train_2[:10])
+    print(y_train[:10])
+    print(y_train_r[:10])
+    return X_train, y_train, y_train_r, X_val, y_val, y_val_r, X_test, y_test, y_test_r
 
 if __name__ == '__main__':
 
     # embeddings, vocab, embedding_size=load_embeddings(embedding_path, 100000)
     # load_abstract_to_label('../data/dataset_abstract_stat_50.npy', embeddings, vocab)
 
-    load_ref_to_label('../data/dataset_ref_stat_50.npy')
+    # load_ref_chain_to_label('../data/dataset_ref_chain_stat_50.npy')
+    load_ref_nb_to_label('../data/dataset_ref_nb_stat_50.npy')
