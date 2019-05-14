@@ -109,5 +109,62 @@ def baseline_reference_neighbors_cnn_model(vocab_size, word_embedding_dim, label
     model.summary()
     return model
 
+def reference_abstract_model(embeddings, word_vocab_size, word_embedding_dim, ref_vocab_size, ref_embedding_dim, label_num, has_rank=False):
+    word_sequence_input = Input(shape=(None,), dtype='int32')
+    
+    word_embedding_layer = Embedding(word_vocab_size,
+                                    word_embedding_dim,
+                                    weights=[embeddings],
+                                    trainable=False)
+
+    
+    embedded_sequences = word_embedding_layer(word_sequence_input)
+    
+    cnn2=Conv1D(filters=50, kernel_size=2, strides=1, padding="same", activation="tanh", name="CNN_bigram")(embedded_sequences)
+    cnn3=Conv1D(filters=50, kernel_size=3, strides=1, padding="same", activation="tanh", name="CNN_trigram")(embedded_sequences)
+    cnn4=Conv1D(filters=50, kernel_size=4, strides=1, padding="same", activation="tanh", name="CNN_4gram")(embedded_sequences)
+
+    # max pooling over all words in the document
+    maxpool2=GlobalMaxPooling1D()(cnn2)
+    maxpool3=GlobalMaxPooling1D()(cnn3)
+    maxpool4=GlobalMaxPooling1D()(cnn4)
+
+    ref_chain_input = Input(shape=(None,), dtype='int32')
+    ref_embedding_layer = Embedding(ref_vocab_size,
+                                    ref_embedding_dim,
+                                    trainable=True)
+    embedded_ref_sequences = ref_embedding_layer(ref_chain_input)
+
+    cnn2_ref=Conv1D(filters=50, kernel_size=2, strides=1, padding="same", activation="tanh", name="CNN_bigram_ref")(embedded_ref_sequences)
+    cnn3_ref=Conv1D(filters=50, kernel_size=3, strides=1, padding="same", activation="tanh", name="CNN_trigram_ref")(embedded_ref_sequences)
+    cnn4_ref=Conv1D(filters=50, kernel_size=4, strides=1, padding="same", activation="tanh", name="CNN_4gram_ref")(embedded_ref_sequences)
+
+    # max pooling over all words in the document
+    maxpool2_ref=GlobalMaxPooling1D()(cnn2_ref)
+    maxpool3_ref=GlobalMaxPooling1D()(cnn3_ref)
+    maxpool4_ref=GlobalMaxPooling1D()(cnn4_ref)
+
+    x=Concatenate()([maxpool2, maxpool3, maxpool4,
+        maxpool2_ref, maxpool3_ref, maxpool4_ref])
+
+    x=Dropout(0.2)(x)
+    if has_rank:
+        y = Dense(50)(x)
+        y = Dense(5, activation='softmax')(y)
+    x=Dense(50)(x)
+    x=Dense(label_num, activation="softmax")(x)
+
+    if has_rank:
+        model = Model(inputs=[word_sequence_input, ref_chain_input], outputs=[x, y])
+        model.compile(loss=['sparse_categorical_crossentropy']*2, 
+                    optimizer='adam', metrics=['acc'])
+    else:
+        model = Model(inputs=[word_sequence_input, ref_chain_input], outputs=x)
+        model.compile(loss='sparse_categorical_crossentropy', 
+                    optimizer='adam', metrics=['acc'])
+    model.summary()
+    return model
+
+
 if __name__ == '__main__':
     pass
